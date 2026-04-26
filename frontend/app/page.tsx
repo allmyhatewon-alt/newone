@@ -5,12 +5,16 @@ import { SignalBoard } from "@/components/Landing/SignalBoard";
 import { PengFund } from "@/components/Landing/PengFund";
 import { EnterHubPortal } from "@/components/Landing/EnterHubPortal";
 import { LandingPengCard } from "@/components/Landing/LandingPengCard";
+import { CosmicOrbs } from "@/components/Effects/CosmicOrbs";
+import { CursorGlow } from "@/components/Effects/CursorGlow";
 
 export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-hidden" data-testid="landing-page">
       <GifBackground />
+      <CosmicOrbs />
       <PengLetters />
+      <CursorGlow />
 
       {/* Scanline overlay */}
       <div
@@ -24,17 +28,15 @@ export default function LandingPage() {
 
       {/* GIANT pink PENG header (top-left) */}
       <h1
-        className="fixed top-0 left-0 select-none pointer-events-none z-0"
+        className="fixed top-0 left-0 select-none pointer-events-none z-0 peng-breathe"
         style={{
           fontFamily: "var(--font-syne)",
           fontWeight: 900,
-          fontSize: "clamp(8rem, 16vw, 18rem)",
+          fontSize: "clamp(8rem, 18vw, 22rem)",
           color: "#ff2bd6",
-          textShadow:
-            "0 0 30px rgba(255,43,214,0.7), 0 0 70px rgba(255,43,214,0.5), 0 0 120px rgba(255,43,214,0.3)",
-          letterSpacing: "-0.02em",
-          lineHeight: 0.85,
-          paddingTop: "0.5rem",
+          letterSpacing: "-0.03em",
+          lineHeight: 0.82,
+          paddingTop: "0.4rem",
           paddingLeft: "1rem",
         }}
         data-testid="giant-peng-text"
@@ -42,21 +44,23 @@ export default function LandingPage() {
         PENG
       </h1>
 
-      {/* Three-column landing layout */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-[280px_1fr_280px] gap-6 max-w-[1400px] mx-auto px-4 pt-32 md:pt-44 pb-32">
+      {/* Three-column landing layout — cosmic spread, side rails pinned to viewport edges */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-[300px_1fr_300px] xl:grid-cols-[340px_1fr_340px] gap-8 md:gap-12 xl:gap-16 w-full max-w-[1700px] mx-auto px-6 md:px-10 xl:px-14 pt-44 md:pt-52 xl:pt-56 pb-32">
         {/* LEFT: SignalBoard + PengFund */}
-        <div className="space-y-4">
+        <div className="space-y-5 slide-up delay-1">
           <SignalBoard />
           <PengFund />
         </div>
 
-        {/* CENTER: peng card */}
-        <div className="flex items-start justify-center">
-          <LandingPengCard />
+        {/* CENTER: peng card with halo */}
+        <div className="flex items-start justify-center slide-up delay-2">
+          <div className="peng-card-halo w-full max-w-md">
+            <LandingPengCard />
+          </div>
         </div>
 
         {/* RIGHT: Enter Hub Portal + creator card */}
-        <div className="space-y-4">
+        <div className="space-y-5 slide-up delay-3">
           <EnterHubPortal />
           <div className="peng-card">
             <div className="flex items-center gap-3">

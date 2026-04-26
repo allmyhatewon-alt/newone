@@ -111,7 +111,7 @@ export function FeedView({ initialBoardSlug = "" }: { initialBoardSlug?: string 
       </div>
 
       {/* Posts */}
-      <div className="space-y-3">
+      <div className="space-y-3 feed-card-stagger" key={tab}>
         {loading && (
           <p className="text-xs text-white/30 py-8 text-center" style={{ fontFamily: "var(--font-mono)" }}>loading…</p>
         )}
@@ -160,7 +160,7 @@ function PostCard({ post, viewerId, onChange }: { post: Post; viewerId?: string;
   const isAuthor = !!viewerId; // simplified — show delete on hover for author
 
   return (
-    <article className="peng-card hover:border-[var(--accent)]/40 transition-colors" data-testid={`post-card-${post.id}`}>
+    <article className="peng-card post-card-lift hover:border-[var(--accent)]/40" data-testid={`post-card-${post.id}`}>
       <div className="flex gap-3">
         <div className="flex flex-col items-center gap-1 pt-1">
           <button onClick={() => castVote(1)} className={`text-sm ${vote === 1 ? "text-[var(--accent)]" : "text-white/30 hover:text-white"}`} data-testid={`upvote-${post.id}`}>▲</button>

@@ -1,13 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
-
-type Track = { url: string; title: string; artist?: string };
-
-// Fallback CC0 ambient tracks (if user hasn't uploaded any, the player still works)
-const FALLBACK_TRACKS: Track[] = [
-  { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", title: "SoundHelix Song 1", artist: "fallback" },
-  { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", title: "SoundHelix Song 2", artist: "fallback" },
-];
+import { usePathname } from "next/navigation";
+import { MUSIC_PLAYLIST, FALLBACK_PLAYLIST, type MusicTrack } from "@/lib/music-config";
 
 function shuffled<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -19,6 +13,10 @@ function shuffled<T>(arr: T[]): T[] {
 }
 
 export function AudioPlayer() {
+  const pathname = usePathname();
+  // Render dock ONLY on the landing page ("/").
+  const visible = pathname === "/";
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -26,27 +24,40 @@ export function AudioPlayer() {
   const srcRef = useRef<MediaElementAudioSourceNode | null>(null);
   const rafRef = useRef<number>(0);
 
-  const [playlist, setPlaylist] = useState<Track[]>([]);
+  const [playlist, setPlaylist] = useState<MusicTrack[]>([]);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [cleanMode, setCleanMode] = useState(false);
   const [started, setStarted] = useState(false);
 
-  // Build playlist: prefer user uploads, fall back to public sample tracks
+  // Build playlist: 1) hard-coded config (preferred) 2) user uploads 3) fallback
   useEffect(() => {
+    if (!visible) return;
+    if (MUSIC_PLAYLIST.length) {
+      setPlaylist(shuffled(MUSIC_PLAYLIST));
+      return;
+    }
     fetch("/api/upload")
       .then((r) => r.ok ? r.json() : { uploads: [] })
       .then((d) => {
-        const userTracks: Track[] = (d.uploads ?? []).map((u: any) => ({
+        const userTracks: MusicTrack[] = (d.uploads ?? []).map((u: any) => ({
           url: u.url,
           title: u.title || u.filename,
           artist: u.artist || undefined,
         }));
-        setPlaylist(userTracks.length ? shuffled(userTracks) : FALLBACK_TRACKS);
+        setPlaylist(userTracks.length ? shuffled(userTracks) : FALLBACK_PLAYLIST);
       })
-      .catch(() => setPlaylist(FALLBACK_TRACKS));
-  }, []);
+      .catch(() => setPlaylist(FALLBACK_PLAYLIST));
+  }, [visible]);
+
+  // pause + tear down audio whenever we leave the landing page
+  useEffect(() => {
+    if (!visible) {
+      try { audioRef.current?.pause(); } catch {}
+      setPlaying(false);
+    }
+  }, [visible]);
 
   const initAudio = useCallback(() => {
     if (!audioRef.current || ctxRef.current) return;
@@ -136,7 +147,11 @@ export function AudioPlayer() {
     if (audioRef.current) audioRef.current.volume = v;
   }
 
-  const trackName = started && playlist[idx] ? playlist[idx].title : "click ▶ to start";
+  if (!visible) return null;
+
+  const trackName = started && playlist[idx]
+    ? `${playlist[idx].title}${playlist[idx].artist ? " · " + playlist[idx].artist : ""}`
+    : "click ▶ to start";
 
   return (
     <div id="audio-player-dock" className={cleanMode ? "clean-mode" : ""} data-testid="audio-player-dock">

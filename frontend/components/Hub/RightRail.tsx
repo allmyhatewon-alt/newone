@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/app/providers";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { fireBurst } from "@/components/Effects/ParticleBurst";
 
 export function RightRail() {
   const { user, refresh } = useAuth();
@@ -11,6 +12,7 @@ export function RightRail() {
     loading: true,
   });
   const [flash, setFlash] = useState<string | null>(null);
+  const checkinBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetch("/api/leaderboard").then((r) => r.json()).then((d) => setTopUsers(d.users?.slice(0, 5) ?? []));
@@ -26,6 +28,13 @@ export function RightRail() {
     const r = await fetch("/api/check-in", { method: "POST" });
     const d = await r.json();
     if (r.ok) {
+      // particle burst from the button
+      const btn = checkinBtnRef.current;
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        fireBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, "var(--xp-color)");
+        setTimeout(() => fireBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, "var(--shard-color)"), 180);
+      }
       setFlash(`+${d.shardsEarned} shards · ${d.streak}-day streak`);
       setCheckInState({ canCheckIn: false, loading: false });
       refresh();
@@ -60,7 +69,7 @@ export function RightRail() {
         <div className="peng-card">
           <p className="text-[10px] tracking-widest text-white/40 mb-3" style={{ fontFamily: "var(--font-mono)" }}>YOUR STATUS</p>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #ff6a00, #ff2e55)" }}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center streak-flicker" style={{ background: "linear-gradient(135deg, #ff6a00, #ff2e55)" }}>
               <span className="text-xl font-black text-white" data-testid="streak-count">{user.streakCount}</span>
             </div>
             <div className="flex-1">
@@ -79,6 +88,7 @@ export function RightRail() {
             <p className="text-xs text-green-400 text-center mb-2" data-testid="checkin-flash" style={{ fontFamily: "var(--font-mono)" }}>{flash}</p>
           )}
           <button
+            ref={checkinBtnRef}
             onClick={checkIn}
             disabled={!checkInState.canCheckIn || checkInState.loading}
             className="w-full peng-btn peng-btn-primary text-xs py-3 disabled:opacity-30"

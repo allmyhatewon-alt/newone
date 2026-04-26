@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/providers";
 import { usePathname } from "next/navigation";
+import { FloatingStat } from "@/components/Effects/FloatingStats";
+import { ParticleBurstHost } from "@/components/Effects/ParticleBurst";
 
 // SVG icon component to avoid emoji "AI slop" — minimal stroke iconography
 function Icon({ name, className = "w-3.5 h-3.5" }: { name: string; className?: string }) {
@@ -70,9 +72,10 @@ export function HubShell({ children, rightRail }: { children: React.ReactNode; r
 
   return (
     <div className="min-h-screen pb-20" data-testid="hub-shell">
+      <ParticleBurstHost />
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-[var(--bg-border)] bg-black/85 backdrop-blur">
-        <div className="flex items-center gap-4 px-4 h-14">
+        <div className="flex items-center gap-4 px-4 lg:px-5 h-14">
           <Link href="/hub" className="flex items-center gap-2" data-testid="hub-logo-link">
             <span className="font-black text-white" style={{ fontFamily: "var(--font-syne)", fontSize: "1.05rem" }}>peng</span>
             <span className="text-white/40 font-mono text-sm" style={{ fontFamily: "var(--font-mono)" }}>hub</span>
@@ -85,18 +88,27 @@ export function HubShell({ children, rightRail }: { children: React.ReactNode; r
               data-testid="hub-search-input"
               type="text"
               placeholder="search creators, posts, boards…"
-              className="w-full bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-full pl-9 pr-4 py-2 text-xs text-white outline-none focus:border-[var(--accent)]"
+              className="w-full bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-full pl-9 pr-4 py-2 text-xs text-white outline-none focus:border-[var(--accent)] transition-colors"
               style={{ fontFamily: "var(--font-mono)" }}
             />
           </div>
 
-          <Link href="/" className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--bg-border)] text-[10px] uppercase tracking-wider text-white/60 hover:border-[var(--accent)] hover:text-white transition-colors" data-testid="goto-landing-link" style={{ fontFamily: "var(--font-mono)" }}>
+          {/* Floating currency stats — clickable, opens animated panel */}
+          {user && (
+            <div className="hidden md:flex items-center gap-2" data-testid="topbar-stats">
+              <FloatingStat kind="shards" />
+              {user.gemsUnlocked && <FloatingStat kind="gems" />}
+              <FloatingStat kind="xp" />
+            </div>
+          )}
+
+          <Link href="/" className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--bg-border)] text-[10px] uppercase tracking-wider text-white/60 hover:border-[var(--accent)] hover:text-white transition-colors" data-testid="goto-landing-link" style={{ fontFamily: "var(--font-mono)" }}>
             + Landing
           </Link>
 
-          <Link href="/hub/quests" className="text-white/40 hover:text-white" data-testid="goto-notifications-link"><Icon name="bell" className="w-4 h-4" /></Link>
+          <Link href="/hub/quests" className="text-white/40 hover:text-white transition-colors" data-testid="goto-notifications-link"><Icon name="bell" className="w-4 h-4" /></Link>
 
-          <Link href="/hub/post/new" className="text-white/40 hover:text-white" data-testid="create-post-link"><Icon name="plus" className="w-4 h-4" /></Link>
+          <Link href="/hub/post/new" className="text-white/40 hover:text-white transition-colors" data-testid="create-post-link"><Icon name="plus" className="w-4 h-4" /></Link>
 
           {user ? (
             <div className="relative">
@@ -129,19 +141,20 @@ export function HubShell({ children, rightRail }: { children: React.ReactNode; r
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_320px] gap-6 max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+      {/* HARD-LEFT grid: full width, sidebar pinned to viewport edge */}
+      <div className="hub-grid">
         {/* LEFT SIDEBAR */}
-        <aside className="hidden lg:block" data-testid="hub-sidebar">
+        <aside className="hidden lg:block sticky top-16 self-start" data-testid="hub-sidebar">
           <SidebarSection label="FEED" items={SIDEBAR_FEED} pathname={pathname} />
-          <div className="mt-8" />
+          <div className="mt-6" />
           <SidebarSection label="COMMUNITY" items={SIDEBAR_COMMUNITY} pathname={pathname} />
-          {user?.role === "ADMIN" && <><div className="mt-8" /><SidebarSection label="OWNER" items={SIDEBAR_OWNER} pathname={pathname} /></>}
-          <div className="mt-8" />
+          {user?.role === "ADMIN" && <><div className="mt-6" /><SidebarSection label="OWNER" items={SIDEBAR_OWNER} pathname={pathname} /></>}
+          <div className="mt-6" />
           <p className="text-[10px] tracking-widest text-white/30 mb-3 px-3" style={{ fontFamily: "var(--font-mono)" }}>POPULAR BOARDS</p>
           <ul className="space-y-1">
             {boards.slice(0, 6).map((b) => (
               <li key={b.slug}>
-                <Link href={`/hub/board/${b.slug}`} className="block px-3 py-1 text-xs text-white/50 hover:text-white" data-testid={`board-link-${b.slug}`} style={{ fontFamily: "var(--font-mono)" }}>
+                <Link href={`/hub/board/${b.slug}`} className="block px-3 py-1 text-xs text-white/50 hover:text-white transition-colors" data-testid={`board-link-${b.slug}`} style={{ fontFamily: "var(--font-mono)" }}>
                   {b.name}
                 </Link>
               </li>
@@ -150,8 +163,8 @@ export function HubShell({ children, rightRail }: { children: React.ReactNode; r
           </ul>
         </aside>
 
-        {/* MAIN */}
-        <main className="min-w-0">{children}</main>
+        {/* MAIN — left-aligned, no center max-width */}
+        <main className="min-w-0 max-w-[820px]">{children}</main>
 
         {/* RIGHT RAIL */}
         <aside className="hidden lg:block">
@@ -173,10 +186,10 @@ function SidebarSection({ label, items, pathname }: { label: string; items: type
             <li key={it.href}>
               <Link
                 href={it.href}
-                className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-xs transition-colors ${
+                className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-xs transition-all ${
                   active
                     ? "bg-white/5 text-white border-l-2 border-[var(--accent)]"
-                    : "text-white/55 hover:text-white hover:bg-white/[0.03]"
+                    : "text-white/55 hover:text-white hover:bg-white/[0.03] hover:translate-x-0.5"
                 }`}
                 data-testid={`sidebar-${it.label.toLowerCase().replace(/\s+/g, "-")}-link`}
                 style={{ fontFamily: "var(--font-mono)" }}
