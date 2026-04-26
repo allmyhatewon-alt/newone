@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/app/providers";
+import { GemShop } from "@/components/Effects/GemShop";
+import { Portal } from "@/components/Effects/Portal";
 
 type Currency = "shards" | "gems" | "xp";
 
@@ -54,14 +56,19 @@ export function FloatingStat({ kind }: { kind: Currency }) {
         <span className="floating-stat-pulse" aria-hidden="true" />
       </button>
 
-      {open && (
-        <FloatingStatPanel
-          kind={kind}
-          value={target}
-          meta={meta}
-          user={user}
-          onClose={() => setOpen(false)}
-        />
+      {open && kind === "gems" && (
+        <Portal><GemShop user={user} onClose={() => setOpen(false)} /></Portal>
+      )}
+      {open && kind !== "gems" && (
+        <Portal>
+          <FloatingStatPanel
+            kind={kind}
+            value={target}
+            meta={meta}
+            user={user}
+            onClose={() => setOpen(false)}
+          />
+        </Portal>
       )}
     </>
   );

@@ -97,7 +97,7 @@ export function HubShell({ children, rightRail }: { children: React.ReactNode; r
           {user && (
             <div className="hidden md:flex items-center gap-2" data-testid="topbar-stats">
               <FloatingStat kind="shards" />
-              {user.gemsUnlocked && <FloatingStat kind="gems" />}
+              <FloatingStat kind="gems" />
               <FloatingStat kind="xp" />
             </div>
           )}
@@ -163,8 +163,8 @@ export function HubShell({ children, rightRail }: { children: React.ReactNode; r
           </ul>
         </aside>
 
-        {/* MAIN — left-aligned, no center max-width */}
-        <main className="min-w-0 max-w-[820px]">{children}</main>
+        {/* MAIN — balanced center column */}
+        <main className="min-w-0">{children}</main>
 
         {/* RIGHT RAIL */}
         <aside className="hidden lg:block">

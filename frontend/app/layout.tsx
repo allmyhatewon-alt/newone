@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Mono, JetBrains_Mono, Press_Start_2P, Syne } from "next/font/google";
+import { Inter, Space_Mono, JetBrains_Mono, Press_Start_2P, Syne, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AudioPlayer } from "@/components/AudioPlayer/AudioPlayer";
@@ -24,6 +24,11 @@ const syne = Syne({
   weight: ["700", "800"],
   subsets: ["latin"],
   variable: "--font-syne",
+});
+const bricolage = Bricolage_Grotesque({
+  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-bricolage",
 });
 
 export const metadata: Metadata = {
@@ -51,7 +56,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${spaceMono.variable} ${jetBrainsMono.variable} ${pressStart.variable} ${syne.variable}`}
+        className={`${inter.variable} ${spaceMono.variable} ${jetBrainsMono.variable} ${pressStart.variable} ${syne.variable} ${bricolage.variable}`}
       >
         <Providers>
           {children}

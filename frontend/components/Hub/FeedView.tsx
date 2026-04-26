@@ -68,23 +68,32 @@ export function FeedView({ initialBoardSlug = "" }: { initialBoardSlug?: string 
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-white lowercase" style={{ fontFamily: "var(--font-syne)" }}>
-            {initialBoardSlug ? `b/${initialBoardSlug}` : "home"}
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="hub-page-title" data-testid="feed-title">
+            {initialBoardSlug ? (
+              <><span className="hub-page-title-slash">/</span>{initialBoardSlug}</>
+            ) : (
+              "Home"
+            )}
           </h1>
-          <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
+          <p className="hub-page-sub">
             {initialBoardSlug ? "board feed" : "your personalized peng feed"}
           </p>
         </div>
-        <Link
-          href={`/hub/post/new${initialBoardSlug ? `?board=${initialBoardSlug}` : ""}`}
-          className="peng-btn peng-btn-primary text-xs flex items-center gap-2"
-          data-testid="create-post-button"
-        >
-          + CREATE POST
-        </Link>
+        <div className="flex items-center gap-3">
+          <LivePulse />
+          <Link
+            href={`/hub/post/new${initialBoardSlug ? `?board=${initialBoardSlug}` : ""}`}
+            className="peng-btn peng-btn-primary text-xs flex items-center gap-2"
+            data-testid="create-post-button"
+          >
+            + CREATE POST
+          </Link>
+        </div>
       </div>
+
+      <AmbientTicker />
 
       {/* Tabs */}
       <div className="flex gap-2 flex-wrap border-b border-[var(--bg-border)] pb-1" data-testid="feed-tabs">
@@ -186,7 +195,7 @@ function PostCard({ post, viewerId, onChange }: { post: Post; viewerId?: string;
           </div>
 
           <Link href={`/hub/post/${post.id}`} className="block hover:opacity-90" data-testid={`post-link-${post.id}`}>
-            <h3 className="text-base font-bold text-white mb-1" style={{ fontFamily: "var(--font-syne)" }}>
+            <h3 className="post-title" style={{ fontFamily: "var(--font-bricolage)" }}>
               {post.isPinned && <span className="text-[var(--accent)] mr-2">📌</span>}
               {post.title}
             </h3>
@@ -207,5 +216,53 @@ function PostCard({ post, viewerId, onChange }: { post: Post; viewerId?: string;
         </div>
       </div>
     </article>
+  );
+}
+
+
+// ── live "online now" pulse pill (mocked drift, looks alive) ─────────
+function LivePulse() {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    setCount(80 + Math.floor(Math.random() * 60));
+    const id = setInterval(() => {
+      setCount((c) => {
+        if (c == null) return c;
+        const drift = Math.round((Math.random() - 0.5) * 6);
+        return Math.max(40, Math.min(220, c + drift));
+      });
+    }, 4500);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="live-pulse" data-testid="live-pulse" title="active right now">
+      <span className="live-pulse-dot" />
+      <span className="live-pulse-num">{count ?? "—"}</span>
+      <span className="live-pulse-label">online</span>
+    </div>
+  );
+}
+
+// ── ambient ticker — rotating natural one-liner ──────────────────────
+const TICKER_LINES = [
+  "stream goes live whenever. follow the signal board.",
+  "drop your clip in b/clips. peng watches everything.",
+  "fan art > effort. post it raw.",
+  "check-in streaks reset at midnight utc. set a phone alarm.",
+  "if it makes you laugh, it'll make a stranger laugh.",
+  "the void is open. don't be weird about it.",
+  "shards from check-ins, gems from staying.",
+];
+function AmbientTicker() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI((x) => (x + 1) % TICKER_LINES.length), 7000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="ambient-ticker" data-testid="ambient-ticker">
+      <span className="ambient-ticker-marker" />
+      <span key={i} className="ambient-ticker-line">{TICKER_LINES[i]}</span>
+    </div>
   );
 }

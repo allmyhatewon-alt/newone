@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Portal } from "@/components/Effects/Portal";
 
 type Burst = { id: number; x: number; y: number; color: string };
 
@@ -24,21 +25,23 @@ export function ParticleBurstHost() {
   }, []);
 
   return (
-    <div className="particle-host" aria-hidden="true">
-      {bursts.map((b) => (
-        <div key={b.id} className="particle-burst" style={{ left: b.x, top: b.y }}>
-          {Array.from({ length: 14 }).map((_, i) => (
-            <span
-              key={i}
-              className="particle-bit"
-              style={{
-                ["--a" as any]: `${(i / 14) * 360}deg`,
-                ["--c" as any]: b.color,
-              }}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
+    <Portal>
+      <div className="particle-host" aria-hidden="true">
+        {bursts.map((b) => (
+          <div key={b.id} className="particle-burst" style={{ left: b.x, top: b.y }}>
+            {Array.from({ length: 14 }).map((_, i) => (
+              <span
+                key={i}
+                className="particle-bit"
+                style={{
+                  ["--a" as any]: `${(i / 14) * 360}deg`,
+                  ["--c" as any]: b.color,
+                }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </Portal>
   );
 }

@@ -16,11 +16,15 @@
 - **Music config (`lib/music-config.ts`)** — drop tracks into `MUSIC_PLAYLIST` (url, title, artist). Falls back to API uploads, then public samples. Local files: place in `/public/music/` and reference as `/music/<file>.mp3`.
 - **Audio dock landing-only** — `AudioPlayer` now uses `usePathname()`; renders + builds playlist only on `/`. Auto-pauses on route change.
 - **Admin console gated server-side** — `/hub/admin` is now a server component that calls `getCurrentUser()`. Anonymous → `/auth/signin?callback=/hub/admin`. Non-`ADMIN` role → `/hub`.
-- **Hub hard-left layout** — new `.hub-grid` (220 / 1fr / 320, full-width, no center max-width). Sidebar pinned to viewport left edge, sticky on scroll. Main column capped at 820px so it doesn't bleed across.
-- **Cosmic landing layout** — wider 3-col (300/1fr/300, up to 340 at xl), 1700px max-width, much bigger gaps + top padding. Halo rings around peng card. New cosmic orbs background + 60 twinkling stars + cursor glow.
-- **Floating currency UI** — `components/Effects/FloatingStats.tsx` shows clickable shard/gem/xp pills in topbar with count-up animation and a pulsing ring. Click → full-screen overlay panel with: 3 concentric orbital rings (one dashed, opposite spin), 12 orbiting nodes at 3 radii, 16 radiating sparks, glowing core symbol, big-number stat with shadow, 4-cell stat grid (level/streak/role/longest), context tip per currency. Esc to close.
-- **Particle burst system** (`ParticleBurst.tsx`) — `fireBurst(x, y, color)` API. Used on daily check-in: bursts XP green + shard cyan from the button.
-- **Live touches** — streak ring flame flicker, post-card hover lift + glow, feed-card stagger reveal on tab switch, sidebar item slide-on-hover, breathing pink PENG glow on landing, sticky sidebar.
+- **Hub layout — centered, balanced** — `.hub-grid` is `220 / 1fr / 320`, `max-width: 1380px; margin: 0 auto`. Sidebar sticky, main column min-width: 0 (no left bleed, no right bleed). Replaced flush-left look from previous iteration after user feedback.
+- **Bricolage Grotesque** added as `--font-bricolage` and applied to all hub headings (`.hub-page-title`) and post titles (`.post-title`). Replaced the stretched `font-syne lowercase 3xl black` style on `Home`, `b/<slug>`, `discover`, `live now`, `clips`, etc. (touched `FeedView.tsx`, `HubStubPage.tsx`).
+- **Cosmic landing layout** — wider 3-col, 1700px max-width, halo rings around peng card, cosmic orbs background + 60 twinkling stars + soft purple cursor glow.
+- **Floating currency UI** — clickable shard/gem/xp pills in topbar with count-up + pulsing ring. **Shards / XP** open the orbital stats panel; **Gems** opens the new shop.
+- **Gem Shop (`components/Effects/GemShop.tsx`)** — terminal-styled overlay (mac-window dots, monospace screen). 8 items with natural, peng-voiced captions (no AI fluff). Captions reveal **letter by letter with a Web-Audio typewriter sound** (noise burst + triangle "thunk" with varied pitch + "carriage return" tone on `,` and `.`). Mute toggle in header. Re-types on item switch. Items list with rare items twinkling gold ✦. BUY button stub for now.
+- **Live touches** — streak ring flame flicker, post-card hover lift + glow, feed-card stagger reveal on tab switch, breathing pink PENG glow on landing, sticky sidebar, **live "online" pulse pill** with mocked drift, **rotating ambient ticker** with 7 natural one-liners.
+- **Particle burst** on daily check-in (xp green + shard cyan).
+- **Portal helper (`Effects/Portal.tsx`)** — required because the topbar's `backdrop-blur` was creating a containing block that broke `position: fixed` for any modal rendered inside it. All overlays + the particle host now portal to `document.body`.
+- **Hydration fix** — `LivePulse` no longer seeds with `Math.random()` during SSR; computes after mount.
 
 ## Tech Files Touched
 - `app/page.tsx`, `app/layout.tsx` (audio still mounted there but conditionally renders)
