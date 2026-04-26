@@ -1,0 +1,63 @@
+import type { Metadata } from "next";
+import { Inter, Space_Mono, JetBrains_Mono, Press_Start_2P, Syne } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
+import { AudioPlayer } from "@/components/AudioPlayer/AudioPlayer";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-space-mono",
+});
+const jetBrainsMono = JetBrains_Mono({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+});
+const pressStart = Press_Start_2P({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-press-start",
+});
+const syne = Syne({
+  weight: ["700", "800"],
+  subsets: ["latin"],
+  variable: "--font-syne",
+});
+
+export const metadata: Metadata = {
+  title: "peng — enter the void",
+  description: "peng — creator · streamer · chaos · enter the void",
+  themeColor: "#000000",
+  openGraph: {
+    title: "peng — enter the void",
+    description: "creator · streamer · chaos · step into the signal",
+    type: "website",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" data-skin="peng_os" suppressHydrationWarning>
+      <head>
+        <link
+          rel="icon"
+          href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐧</text></svg>'
+        />
+      </head>
+      <body
+        className={`${inter.variable} ${spaceMono.variable} ${jetBrainsMono.variable} ${pressStart.variable} ${syne.variable}`}
+      >
+        <Providers>
+          {children}
+          <AudioPlayer />
+        </Providers>
+      </body>
+    </html>
+  );
+}
