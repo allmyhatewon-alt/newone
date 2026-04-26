@@ -1,0 +1,308 @@
+// PENG hub Prisma schema — SQLite for local dev, swap provider to "postgresql" for prod
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────
+// CORE USER
+// ─────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  displayName   String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+  bio           String?
+  bannerUrl     String?
+  accentColor   String    @default("#8a2be2")
+  role          String    @default("USER") // USER | MOD | ADMIN
+
+  // Economy — denormalized for O(1) balance reads
+  shards        Int       @default(0)
+  gems          Int       @default(0)
+  xp            Int       @default(0)
+  level         Int       @default(1)
+
+  // Streaks
+  streakCount   Int       @default(0)
+  longestStreak Int       @default(0)
+  lastCheckIn   DateTime?
+
+  // Flags
+  onboarded     Boolean   @default(false)
+  gemsUnlocked  Boolean   @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  hubProfile      HubProfile?
+  space           Space?
+  inventory       InventoryItem[]
+  transactions    Transaction[]
+  checkIns        CheckIn[]
+  achievements    UserAchievement[]
+  uploads         AudioUpload[]
+  posts           Post[]
+  comments        Comment[]
+  postVotes       PostVote[]
+  follows         Follow[]    @relation("Follower")
+  followers       Follow[]    @relation("Following")
+}
+
+// ─────────────────────────────────────────────────────────
+// HUB PROFILE — the "Social ID" at /hub/user/@username
+// ─────────────────────────────────────────────────────────
+
+model HubProfile {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+
+  portalEnabled Boolean @default(true)
+  portalLabel   String  @default("Enter My Space")
+
+  activeSkinId  String?
+  activeAuraId  String?
+
+  tiktokUrl     String?
+  twitchUrl     String?
+  youtubeUrl    String?
+  kickUrl       String?
+  discordUser   String?
+  twitterUrl    String?
+  instagramUrl  String?
+
+  showStats     Boolean @default(true)
+  showStreak    Boolean @default(true)
+
+  // Showcase: serialized blocks rendered on the Hub Profile (mini-landing)
+  showcase      String  @default("[]")
+
+  interests     String  @default("[]") // JSON string array
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────
+// SPACE — the "Personal Domain" at /@username
+// ─────────────────────────────────────────────────────────
+
+model Space {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+
+  published    Boolean @default(true)
+  blocks       String  @default("[]") // JSON string
+
+  customCss    String?
+  bootSequence String?
+
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────
+// COMMUNITY — boards, posts, comments, votes
+// ─────────────────────────────────────────────────────────
+
+model Board {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  icon        String?
+  postCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  posts       Post[]
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  boardId     String
+  authorId    String
+  title       String
+  body        String
+  flair       String?  // "FAN DISCUSSION", "CLIP", etc.
+  voteScore   Int      @default(0)
+  commentCount Int     @default(0)
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  board    Board     @relation(fields: [boardId], references: [id])
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  votes    PostVote[]
+
+  @@index([boardId, createdAt])
+  @@index([createdAt])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model PostVote {
+  id     String @id @default(cuid())
+  postId String
+  userId String
+  value  Int    // -1 or +1
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+}
+
+// ─────────────────────────────────────────────────────────
+// SHOP CATALOG
+// ─────────────────────────────────────────────────────────
+
+model CatalogItem {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  type        String    // BLOCK | SKIN | AURA | BOOT_SEQ | BADGE | MUSIC_PACK
+  tier        String    // FREE | SHARD | GEM
+  price       Int       @default(0)
+  previewUrl  String?
+  metadata    String?   // JSON string
+
+  createdAt   DateTime  @default(now())
+
+  inventory   InventoryItem[]
+}
+
+model InventoryItem {
+  id          String    @id @default(cuid())
+  userId      String
+  itemId      String
+  equippedAt  DateTime?
+
+  createdAt   DateTime  @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item        CatalogItem @relation(fields: [itemId], references: [id])
+
+  @@unique([userId, itemId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────
+// ECONOMY LEDGER
+// ─────────────────────────────────────────────────────────
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // CHECK_IN_REWARD | STREAK_BONUS | etc.
+  currency  String   // SHARD | GEM | XP
+  amount    Int
+  balance   Int
+  metadata  String?  // JSON string
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  userId       String
+  date         String   // "YYYY-MM-DD"
+  streak       Int
+  multiplier   Float    @default(1.0)
+  shardsEarned Int
+
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model Achievement {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  iconEmoji   String  @default("◈")
+  xpReward    Int     @default(0)
+  shardReward Int     @default(0)
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@id([userId, achievementId])
+}
+
+// ─────────────────────────────────────────────────────────
+// MP3 UPLOADS — local storage in dev, S3/R2 in prod
+// ─────────────────────────────────────────────────────────
+
+model AudioUpload {
+  id        String  @id @default(cuid())
+  userId    String
+  filename  String
+  storageKey String  @unique // local path or R2 key
+  url       String
+  duration  Int?
+  sizeBytes Int?
+  title     String?
+  artist    String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

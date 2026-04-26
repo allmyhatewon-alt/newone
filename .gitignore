@@ -31,3 +31,12 @@ Thumbs.db
 # Large audio files — host on R2, not git
 public/bg/*.mp3
 public/bg/*.wav
+-e 
+# Environment and credential files
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
